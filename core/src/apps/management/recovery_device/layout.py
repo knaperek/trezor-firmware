@@ -13,6 +13,7 @@ from apps.common import storage
 from apps.common.confirm import confirm, require_confirm
 from apps.common.layout import show_success, show_warning
 from apps.homescreen.homescreen import homescreen
+from apps.management import recovery_device
 
 if __debug__:
     from apps.debug import input_signal, confirm_signal
@@ -62,6 +63,23 @@ async def request_mnemonic(ctx: wire.Context, count: int, slip39: bool) -> str:
             word = await ctx.wait(keyboard, input_signal)
         else:
             word = await ctx.wait(keyboard)
+
+        # TODO: how was it with the kittens, UI and storage?
+        mnemonics = storage.device.slip39.slip39_mnemonics.fetch()
+        if slip39 and len(mnemonics) > 0 and i < 4:
+            for share in mnemonics:
+                share_list = share.split(" ")
+                # check if first 3 words of mnemonic match
+                if i < 3:
+                    if share_list[i] != word:
+                        await show_identifier_mismatch(ctx)
+                        # TODO: review is this the proper way to restart the workflow?
+                        return await recovery_device.recovery_homescreen(True)
+                # check if the fourth word is different from previous shares
+                if i == 3:
+                    if share_list[i] == word:
+                        await show_share_already_added(ctx)
+                        return await recovery_device.recovery_homescreen(True)
         words.append(word)
 
     return " ".join(words)
@@ -127,6 +145,22 @@ async def show_invalid_mnemonic(ctx, slip39: bool = False):
             ("You have entered", "a recovery seed", "that is not valid."),
             button="Try again",
         )
+
+
+async def show_share_already_added(ctx):
+    return await show_warning(
+        ctx,
+        ("Share already entered", "please enter", "a different share"),
+        button="Try again",
+    )
+
+
+async def show_identifier_mismatch(ctx):
+    return await show_warning(
+        ctx,
+        ("You have entered", "a share from another", "Shamir Backup"),
+        button="Try again",
+    )
 
 
 class RecoveryHomescreen(ui.Control):
