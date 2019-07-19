@@ -4,7 +4,7 @@
   "coin_label": "Capricoin",
   "website": "https://capricoin.org",
   "github": "https://github.com/Capricoinofficial/Capricoin",
-  "maintainer": "Jozef Knaperek <jknaperek@gmail.com>",
+  "maintainer": "Jozef Knaperek <jozef.knaperek@01cryptohouse.com>",
   "curve_name": "secp256k1",
   "address_type": 28,
   "address_type_p2sh": 35,
